@@ -17,6 +17,36 @@ Pin#    Function
 14      !RESET
 */
 
+
+/*
+-- Control Codes --
+Data    Description
+08      BACK SPACE CURSOR LOCATION ONE POSITION
+09      ADVANCE CURSOR LOCATION ONE POSITION
+0A      LINE FEED (vertical scroll from bottom line; cursor positions to the left-most grid)
+0D      CARRIAGE RETURN (returns cursor to left-most character position of the same line; does not clear display)
+0E      MAKE CURSOR INDICATOR INVISIBLE (the cursor location counter continues to function but there is no visible indicator of next location)
+0F      MAKE CURSOR INDICATOR VISIBLE (Flashing “reverse rubout character”)
+<11>    NORMAL DATA ENTRY WITH WRAPAROUND TO HOME POSITION (data enters beginning at the home position)
+<12>    OVERWRITE OF RIGHT-MOST CHARACTER ON THE BOTTOM LINE ONLY/ AUTOMATIC CARRIAGE RETURN OFF
+<13>    HORIZONTAL SCROLL MODE (from right to left on bottom line only, after line has been filled)
+14      RESET
+15      DISPLAY CLEAR (returns cursor to upper left-most position of multi-line displays)
+16      CURSOR HOME (returns cursor to upper left-most position)
+18      BEGIN USER DEFINED CHARACTER LOADING
+19      BIT 7 HIGH FOR NEXT BYTE ONLY
+*/
+
+/*
+-- Brightness Levels --
+Data    Description
+1C      Dimmest (12%)
+1D      Dim (25%)
+1E      Bright (50%)
+1F      Brightest (100%)
+Display automatically defaults to "Brightest" after power-up.
+*/
+
 /*
 -- Character Map --
 00-20   [unused]
