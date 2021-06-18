@@ -1,18 +1,14 @@
-/*
--- Brightness Levels --
-Data    Description
-1C      Dimmest (12%)
-1D      Dim (25%)
-1E      Bright (50%)
-1F      Brightest (100%)
-Display automatically defaults to "Brightest" after power-up.
-*/
+use crate::character::Character;
+use crate::display::VfdDisplay;
 
+#[repr(u8)]
+#[derive(Copy, Clone)]
 pub enum BrightnessLevel {
-    Dimmest,
-    Dim,
-    Bright,
-    Brightest,
+    Dimmest = 0x1C,
+    Dim = 0x1D,
+    Bright = 0x1E,
+    // Display automatically defaults to "Brightest" after power-up.
+    Brightest = 0x1F,
 }
 
 /// Holds commands which can be sent to the display.
@@ -29,12 +25,13 @@ pub enum Command {
     HideCursor,
     /// MAKE CURSOR INDICATOR VISIBLE (0x0F)
     ShowCursor,
+    SendCharacter(Character),
     /// NORMAL DATA ENTRY WITH WRAPAROUND TO HOME POSITION (<11>)
-    TodoNormalDataEntry,
+    NormalDataEntry,
     /// OVERWRITE OF RIGHT-MOST CHARACTER ON THE BOTTOM LINE ONLY/ AUTOMATIC CARRIAGE RETURN OFF (<12>)
-    TodoOverwriteRightMost,
+    OverwriteRightMost,
     /// HORIZONTAL SCROLL MODE (from right to left on bottom line only, after line has been filled) (<13>)
-    TodoHorizontalScrollMode,
+    HorizontalScrollMode,
     /// RESET (0x14)
     Reset,
     /// DISPLAY CLEAR (0x15)
@@ -48,27 +45,25 @@ pub enum Command {
     SetBrightness(BrightnessLevel),
 }
 
-// impl Command {
-//     pub(crate) fn send<DI>(self, display: &mut DI) -> Result<(), DisplayError>
-//         where
-//             DI: WriteOnlyDataCommand,
-//     {
-//         let (data, len) = match self {
-//             Self::Backspace => ([0x08, 0, 0], 1),
-//             Self::AdvanceCursor => ([0x09, 0, 0], 1),
-//             Self::LineFeed => ([0x0A, 0, 0], 1),
-//             Self::CarriageReturn => ([0x0D, 0, 0], 1),
-//             Self::HideCursor => ([0x0E, 0, 0], 1),
-//             Self::ShowCursor => ([0x0F, 0, 0], 1),
-//             Self::TodoNormalDataEntry => unimplemented!(),//([0x11, 0, 0], 1),
-//             Self::TodoOverwriteRightMost => unimplemented!(),//([0x12, 0, 0], 1),
-//             Self::TodoHorizontalScrollMode => unimplemented!(),//([0x13, 0, 0], 1),
-//             Self::Reset => ([0x14, 0, 0], 1),
-//             Self::Clear => ([0x15, 0, 0], 1),
-//             Self::CursorHome => ([0x16, 0, 0], 1),
-//             Self::StartLoadingCustomCharacter => ([0x18, 0, 0], 1),
-//             Self::MsbHighForNextByteOnly => ([0x19, 0, 0], 1),
-//         };
-//         display.send_commands(U8(&data[0..len]))
-//     }
-// }
+impl Command {
+    pub(crate) fn to_byte(&self) -> u8 {
+        match self {
+            Self::Backspace => 0x08,
+            Self::AdvanceCursor => 0x09,
+            Self::LineFeed => 0x0A,
+            Self::CarriageReturn => 0x0D,
+            Self::HideCursor => 0x0E,
+            Self::ShowCursor => 0x0F,
+            Self::SendCharacter(character) => *character as u8,
+            Self::NormalDataEntry => 0x11,
+            Self::OverwriteRightMost => 0x12,
+            Self::HorizontalScrollMode => 0x13,
+            Self::Reset => 0x14,
+            Self::Clear => 0x15,
+            Self::CursorHome => 0x16,
+            Self::StartLoadingCustomCharacter => 0x18,
+            Self::MsbHighForNextByteOnly => 0x19,
+            Self::SetBrightness(brightness_level) => *brightness_level as u8,
+        }
+    }
+}

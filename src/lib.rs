@@ -18,11 +18,8 @@ A4     14      !RESET
 */
 
 #![deny(unsafe_code)]
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
 pub mod character;
 pub mod command;
-
-// pub fn initialize() {
-//
-// }
+pub mod display;

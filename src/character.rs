@@ -1,182 +1,357 @@
-/*
--- Character Map --
-0x00-0x20   [unused]
-0x21      !
-0x23      "
-0x23      #
-0x24      $
-0x25      %
-0x26      &
-0x27      '
-0x28      (
-0x29      )
-0x2A      *
-0x2B      +
-0x2C      ,
-0x2D      -
-0x2E      .
-0x2F      /
-0x30      0
-0x31      1
-0x32      2
-0x33      3
-0x34      4
-0x35      5
-0x36      6
-0x37      7
-0x38      8
-0x39      9
-0x3A      :
-0x3B      ;
-0x3C      <
-0x3D      =
-0x3E      >
-0x3F      ?
-0x40      @
-0x41      A
-0x42      B
-0x43      C
-0x44      D
-0x45      E
-0x46      F
-0x47      G
-0x48      H
-0x49      I
-0x4A      J
-0x4B      K
-0x4C      L
-0x4D      M
-0x4E      N
-0x4F      O
-0x50      P
-0x51      Q
-0x52      R
-0x53      S
-0x54      T
-0x55      U
-0x56      V
-0x57      W
-0x58      X
-0x59      Y
-0x5A      Z
-0x5B      [
-0x5C      ￥
-0x5D      ]
-0x5E      ^
-0x5F      _
-0x60      `
-0x61      a
-0x62      b
-0x63      c
-0x64      d
-0x65      e
-0x66      f
-0x67      g
-0x68      h
-0x69      i
-0x6A      j
-0x6B      k
-0x6C      l
-0x6D      m
-0x6E      n
-0x6F      o
-0x70      p
-0x71      q
-0x72      r
-0x73      s
-0x74      t
-0x75      u
-0x76      v
-0x77      w
-0x78      x
-0x79      y
-0x7A      z
-0x7B      {
-0x7C      €
-0x7D      }
-0x7E      °
-0x7F      [alternating dots]
-0x80-0x9F   [unused]
-0xA0      Ä
-0xA1      Å
-0xA2      Á
-0xA3      Ç
-0xA4      Â
-0xA5      Æ
-0xA6      É
-0xA7      È
-0xA8      Ê
-0xA9      Ï
-0xAA      Í
-0xAB      Ì
-0xAC      Î
-0xAD      Ö
-0xAE      Ñ
-0xAF      0
-0xB0      Ó
-0xB1      Ò
-0xB2      À
-0xB3      ß
-0xB4      Ë
-0xB5      Ü
-0xB6      Ú
-0xB7      Ù
-0xB8      Û
-0xB9       ֯
-0xBA      ±
-0xBB      ÷
-0xBC      ➡ (filled)
-0xBD      ➡ (unfilled)
-0xBE      ♦
-0xBF      Ô
-0xC0      ä
-0xC1      å
-0xC2      á
-0xC3      ç
-0xC4      â
-0xC5      æ
-0xC6      é
-0xC7      è
-0xC8      ê
-0xC9      ï
-0xCA      í
-0xCB      ì
-0xCC      î
-0xCD      ö
-0xCE      ñ
-0xCF      ø
-0xD0      ó
-0xD1      ò
-0xD2      à
-0xD3      ¢
-0xD4      ë
-0xD5      ü
-0xD6      ú
-0xD7      ù
-0xD8      û
-0xD9      ○
-0xDA      ⊙
-0xDB      [filled circle]
-0xDC      [unfilled square]
-0xDD      [filled square]
-0xDE      [unfilled diamond]
-0xDF      ô
-0xE0      [0]
-0xE1      [1]
-0xE2      [2]
-0xE3      [3]
-0xE4      [4]
-0xE5      [5]
-0xE6      [6]
-0xE7      [7]
-0xE8      [8]
-0xE9      [9]
-0xEA      [empty]
-0xEB      [empty]
-0xEC      [empty]
-0xED      [empty]
-0xEE      [empty]
-0xEF      [filled]
-0xF0-0xF5   [unused]
-0xF6-0xFF   [user-defined char]
-*/
+use bit_vec::BitVec;
+
+use crate::command::Command;
+use crate::display::{SendCommand, VfdDisplay};
+
+#[repr(u8)]
+#[derive(Copy, Clone)]
+pub enum Character {
+    ExclamationPoint = 0x21,
+    DoubleQuote = 0x22,
+    Number = 0x23,
+    Dollar = 0x24,
+    Percent = 0x25,
+    Ampersand = 0x26,
+    SingleQuote = 0x27,
+    OpenParenthesis = 0x28,
+    CloseParenthesis = 0x29,
+    Asterisk = 0x2A,
+    Plus = 0x2B,
+    Comma = 0x2C,
+    Dash = 0x2D,
+    Period = 0x2E,
+    Slash = 0x2F,
+    Zero = 0x30,
+    One = 0x31,
+    Two = 0x32,
+    Three = 0x33,
+    Four = 0x34,
+    Five = 0x35,
+    Six = 0x36,
+    Seven = 0x37,
+    Eight = 0x38,
+    Nine = 0x39,
+    Colon = 0x3A,
+    Semicolon = 0x3B,
+    OpenBracket = 0x3C,
+    Equals = 0x3D,
+    CloseBracket = 0x3E,
+    Question = 0x3F,
+    At = 0x40,
+    UppercaseA = 0x41,
+    UppercaseB = 0x42,
+    UppercaseC = 0x43,
+    UppercaseD = 0x44,
+    UppercaseE = 0x45,
+    UppercaseF = 0x46,
+    UppercaseG = 0x47,
+    UppercaseH = 0x48,
+    UppercaseI = 0x49,
+    UppercaseJ = 0x4A,
+    UppercaseK = 0x4B,
+    UppercaseL = 0x4C,
+    UppercaseM = 0x4D,
+    UppercaseN = 0x4E,
+    UppercaseO = 0x4F,
+    UppercaseP = 0x50,
+    UppercaseQ = 0x51,
+    UppercaseR = 0x52,
+    UppercaseS = 0x53,
+    UppercaseT = 0x54,
+    UppercaseU = 0x55,
+    UppercaseV = 0x56,
+    UppercaseW = 0x57,
+    UppercaseX = 0x58,
+    UppercaseY = 0x59,
+    UppercaseZ = 0x5A,
+    OpenSquareBracket = 0x5B,
+    Yen = 0x5C,
+    CloseSquareBracket = 0x5D,
+    Caret = 0x5E,
+    Underscore = 0x5F,
+    Backtick = 0x60,
+    LowercaseA = 0x61,
+    LowercaseB = 0x62,
+    LowercaseC = 0x63,
+    LowercaseD = 0x64,
+    LowercaseE = 0x65,
+    LowercaseF = 0x66,
+    LowercaseG = 0x67,
+    LowercaseH = 0x68,
+    LowercaseI = 0x69,
+    LowercaseJ = 0x6A,
+    LowercaseK = 0x6B,
+    LowercaseL = 0x6C,
+    LowercaseM = 0x6D,
+    LowercaseN = 0x6E,
+    LowercaseO = 0x6F,
+    LowercaseP = 0x70,
+    LowercaseQ = 0x71,
+    LowercaseR = 0x72,
+    LowercaseS = 0x73,
+    LowercaseT = 0x74,
+    LowercaseU = 0x75,
+    LowercaseV = 0x76,
+    LowercaseW = 0x77,
+    LowercaseX = 0x78,
+    LowercaseY = 0x79,
+    LowercaseZ = 0x7A,
+    OpenCurlyBracket = 0x7B,
+    Euro = 0x7C,
+    CloseCurlyBracket = 0x7D,
+    Degree = 0x7E,
+    AlternatingDots = 0x7F,
+    UppercaseADiaeresis = 0xA0,
+    UppercaseARingAbove = 0xA1,
+    UppercaseAAcute = 0xA2,
+    UppercaseCCedilla = 0xA3,
+    UppercaseACircumflex = 0xA4,
+    UppercaseAE = 0xA5,
+    UppercaseEAcute = 0xA6,
+    UppercaseEGrave = 0xA7,
+    UppercaseECircumflex = 0xA8,
+    UppercaseIDiaeresis = 0xA9,
+    UppercaseIAcute = 0xAA,
+    UppercaseIGrave = 0xAB,
+    UppercaseICircumflex = 0xAC,
+    UppercaseODiaeresis = 0xAD,
+    UppercaseNTilde = 0xAE,
+    UppercaseOStroke = 0xAF,
+    UppercaseOAcute = 0xB0,
+    UppercaseOGrave = 0xB1,
+    UppercaseAGrave = 0xB2,
+    UppercaseSharpS = 0xB3,
+    UppercaseEDiaeresis = 0xB4,
+    UppercaseUDiaeresis = 0xB5,
+    UppercaseUAcute = 0xB6,
+    UppercaseUGrave = 0xB7,
+    UppercaseUCircumflex = 0xB8,
+    TopCenterCircle = 0xB9,
+    PlusMinus = 0xBA,
+    Division = 0xBB,
+    ArrowFilled = 0xBC,
+    Arrow = 0xBD,
+    DiamondFilled = 0xBE,
+    UppercaseOCircumflex = 0xBF,
+    LowercaseADiaeresis = 0xC0,
+    LowercaseARingAbove = 0xC1,
+    LowercaseAAcute = 0xC2,
+    LowercaseCCedilla = 0xC3,
+    LowercaseACircumflex = 0xC4,
+    LowercaseAE = 0xC5,
+    LowercaseEAcute = 0xC6,
+    LowercaseEGrave = 0xC7,
+    LowercaseECircumflex = 0xC8,
+    LowercaseIDiaeresis = 0xC9,
+    LowercaseIAcute = 0xCA,
+    LowercaseIGrave = 0xCB,
+    LowercaseICircumflex = 0xCC,
+    LowercaseODiaeresis = 0xCD,
+    LowercaseNTilde = 0xCE,
+    LowercaseOStroke = 0xCF,
+    LowercaseOAcute = 0xD0,
+    LowercaseOGrave = 0xD1,
+    LowercaseAGrave = 0xD2,
+    Cent = 0xD3,
+    LowercaseEDiaeresis = 0xD4,
+    LowercaseUDiaeresis = 0xD5,
+    LowercaseUAcute = 0xD6,
+    LowercaseUGrave = 0xD7,
+    LowercaseUCircumflex = 0xD8,
+    Circle = 0xD9,
+    CircleDotted = 0xDA,
+    CircleFilled = 0xDB,
+    Square = 0xDC,
+    SquareFilled = 0xDD,
+    Diamond = 0xDE,
+    LowercaseOCircumflex = 0xDF,
+    FancyZero = 0xE0,
+    FancyOne = 0xE1,
+    FancyTwo = 0xE2,
+    FancyThree = 0xE3,
+    FancyFour = 0xE4,
+    FancyFive = 0xE5,
+    FancySix = 0xE6,
+    FancySeven = 0xE7,
+    FancyEight = 0xE8,
+    FancyNine = 0xE9,
+    Empty = 0xEA,
+    Filled = 0xEF,
+    UserDefined1 = 0xF6,
+    UserDefined2 = 0xF7,
+    UserDefined3 = 0xF8,
+    UserDefined4 = 0xF9,
+    UserDefined5 = 0xFA,
+    UserDefined6 = 0xFB,
+    UserDefined7 = 0xFC,
+    UserDefined8 = 0xFD,
+    UserDefined9 = 0xFE,
+    UserDefined10 = 0xFF,
+}
+
+pub fn lookup_character(character: char) -> Option<Character> {
+    match character {
+        ' ' => Some(Character::Empty),
+        '!' => Some(Character::ExclamationPoint),
+        '#' => Some(Character::Number),
+        '$' => Some(Character::Dollar),
+        '%' => Some(Character::Percent),
+        '&' => Some(Character::Ampersand),
+        '\'' => Some(Character::SingleQuote),
+        '"' => Some(Character::DoubleQuote),
+        '(' => Some(Character::OpenParenthesis),
+        ')' => Some(Character::CloseParenthesis),
+        '*' => Some(Character::Asterisk),
+        '+' => Some(Character::Plus),
+        ',' => Some(Character::Comma),
+        '-' => Some(Character::Dash),
+        '.' => Some(Character::Period),
+        '/' => Some(Character::Slash),
+        '0' => Some(Character::Zero),
+        '1' => Some(Character::One),
+        '2' => Some(Character::Two),
+        '3' => Some(Character::Three),
+        '4' => Some(Character::Four),
+        '5' => Some(Character::Five),
+        '6' => Some(Character::Six),
+        '7' => Some(Character::Seven),
+        '8' => Some(Character::Eight),
+        '9' => Some(Character::Nine),
+        ':' => Some(Character::Colon),
+        ';' => Some(Character::Semicolon),
+        '<' => Some(Character::OpenBracket),
+        '=' => Some(Character::Equals),
+        '>' => Some(Character::CloseBracket),
+        '?' => Some(Character::Question),
+        '@' => Some(Character::At),
+        'A' => Some(Character::UppercaseA),
+        'B' => Some(Character::UppercaseB),
+        'C' => Some(Character::UppercaseC),
+        'D' => Some(Character::UppercaseD),
+        'E' => Some(Character::UppercaseE),
+        'F' => Some(Character::UppercaseF),
+        'G' => Some(Character::UppercaseG),
+        'H' => Some(Character::UppercaseH),
+        'I' => Some(Character::UppercaseI),
+        'J' => Some(Character::UppercaseJ),
+        'K' => Some(Character::UppercaseK),
+        'L' => Some(Character::UppercaseL),
+        'M' => Some(Character::UppercaseM),
+        'N' => Some(Character::UppercaseN),
+        'O' => Some(Character::UppercaseO),
+        'P' => Some(Character::UppercaseP),
+        'Q' => Some(Character::UppercaseQ),
+        'R' => Some(Character::UppercaseR),
+        'S' => Some(Character::UppercaseS),
+        'T' => Some(Character::UppercaseT),
+        'U' => Some(Character::UppercaseU),
+        'V' => Some(Character::UppercaseV),
+        'W' => Some(Character::UppercaseW),
+        'X' => Some(Character::UppercaseX),
+        'Y' => Some(Character::UppercaseY),
+        'Z' => Some(Character::UppercaseZ),
+        '[' => Some(Character::OpenSquareBracket),
+        ']' => Some(Character::CloseSquareBracket),
+        '^' => Some(Character::Caret),
+        '_' => Some(Character::Underscore),
+        '`' => Some(Character::Backtick),
+        'a' => Some(Character::LowercaseA),
+        'b' => Some(Character::LowercaseB),
+        'c' => Some(Character::LowercaseC),
+        'd' => Some(Character::LowercaseD),
+        'e' => Some(Character::LowercaseE),
+        'f' => Some(Character::LowercaseF),
+        'g' => Some(Character::LowercaseG),
+        'h' => Some(Character::LowercaseH),
+        'i' => Some(Character::LowercaseI),
+        'j' => Some(Character::LowercaseJ),
+        'k' => Some(Character::LowercaseK),
+        'l' => Some(Character::LowercaseL),
+        'm' => Some(Character::LowercaseM),
+        'n' => Some(Character::LowercaseN),
+        'o' => Some(Character::LowercaseO),
+        'p' => Some(Character::LowercaseP),
+        'q' => Some(Character::LowercaseQ),
+        'r' => Some(Character::LowercaseR),
+        's' => Some(Character::LowercaseS),
+        't' => Some(Character::LowercaseT),
+        'u' => Some(Character::LowercaseU),
+        'v' => Some(Character::LowercaseV),
+        'w' => Some(Character::LowercaseW),
+        'x' => Some(Character::LowercaseX),
+        'y' => Some(Character::LowercaseY),
+        'z' => Some(Character::LowercaseZ),
+        '{' => Some(Character::OpenCurlyBracket),
+        '}' => Some(Character::CloseCurlyBracket),
+        '¢' => Some(Character::Cent),
+        '°' => Some(Character::Degree),
+        '±' => Some(Character::PlusMinus),
+        'À' => Some(Character::UppercaseAGrave),
+        'Á' => Some(Character::UppercaseAAcute),
+        'Â' => Some(Character::UppercaseACircumflex),
+        'Ä' => Some(Character::UppercaseADiaeresis),
+        'Å' => Some(Character::UppercaseARingAbove),
+        'Æ' => Some(Character::UppercaseAE),
+        'Ç' => Some(Character::UppercaseCCedilla),
+        'È' => Some(Character::UppercaseEGrave),
+        'É' => Some(Character::UppercaseEAcute),
+        'Ê' => Some(Character::UppercaseECircumflex),
+        'Ë' => Some(Character::UppercaseEDiaeresis),
+        'Ì' => Some(Character::UppercaseIGrave),
+        'Í' => Some(Character::UppercaseIAcute),
+        'Î' => Some(Character::UppercaseICircumflex),
+        'Ï' => Some(Character::UppercaseIDiaeresis),
+        'Ñ' => Some(Character::UppercaseNTilde),
+        'Ò' => Some(Character::UppercaseOGrave),
+        'Ó' => Some(Character::UppercaseOAcute),
+        'Ô' => Some(Character::UppercaseOCircumflex),
+        'Ö' => Some(Character::UppercaseODiaeresis),
+        'Ù' => Some(Character::UppercaseUGrave),
+        'Ú' => Some(Character::UppercaseUAcute),
+        'Û' => Some(Character::UppercaseUCircumflex),
+        'Ü' => Some(Character::UppercaseUDiaeresis),
+        'ß' => Some(Character::UppercaseSharpS),
+        'à' => Some(Character::LowercaseAGrave),
+        'á' => Some(Character::LowercaseAAcute),
+        'â' => Some(Character::LowercaseACircumflex),
+        'ä' => Some(Character::LowercaseADiaeresis),
+        'å' => Some(Character::LowercaseARingAbove),
+        'æ' => Some(Character::LowercaseAE),
+        'ç' => Some(Character::LowercaseCCedilla),
+        'è' => Some(Character::LowercaseEGrave),
+        'é' => Some(Character::LowercaseEAcute),
+        'ê' => Some(Character::LowercaseECircumflex),
+        'ë' => Some(Character::LowercaseEDiaeresis),
+        'ì' => Some(Character::LowercaseIGrave),
+        'í' => Some(Character::LowercaseIAcute),
+        'î' => Some(Character::LowercaseICircumflex),
+        'ï' => Some(Character::LowercaseIDiaeresis),
+        'ñ' => Some(Character::LowercaseNTilde),
+        'ò' => Some(Character::LowercaseOGrave),
+        'ó' => Some(Character::LowercaseOAcute),
+        'ô' => Some(Character::LowercaseOCircumflex),
+        'ö' => Some(Character::LowercaseODiaeresis),
+        '÷' => Some(Character::Division),
+        'ø' => Some(Character::LowercaseOStroke),
+        'ù' => Some(Character::LowercaseUGrave),
+        'ú' => Some(Character::LowercaseUAcute),
+        'û' => Some(Character::LowercaseUCircumflex),
+        'ü' => Some(Character::LowercaseUDiaeresis),
+        '€' => Some(Character::Euro),
+        '⊙' => Some(Character::CircleDotted),
+        '○' => Some(Character::Circle),
+        '♦' => Some(Character::DiamondFilled),
+        '￥' => Some(Character::Yen),
+        _ => None,
+    }
+}
+
+impl Character {
+    pub(crate) fn send<DI>(self, display: &mut DI)
+    where
+        DI: SendCommand,
+    {
+        display.send_command(&Command::NormalDataEntry);
+        display.send_command(&Command::SendCharacter(self));
+    }
+}

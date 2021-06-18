@@ -1,11 +1,4 @@
-//! Blinks an LED
-//!
-//! This assumes that a LED is connected to pc13 as is the case on the blue pill board.
-//!
-//! Note: Without additional hardware, PC13 should not be used to drive an LED, see page 5.1.2 of
-//! the reference manual for an explanation. This is not an issue on the blue pill.
-
-#![deny(unsafe_code)]
+#![feature(default_alloc_error_handler)]
 #![no_std]
 #![no_main]
 
@@ -13,12 +6,22 @@ use panic_halt as _;
 
 use nb::block;
 
+use alloc_cortex_m::CortexMHeap;
 use cortex_m_rt::entry;
+// use cortex_m_semihosting::{hprintln, debug};
 use embedded_hal::digital::v2::OutputPin;
 use stm32f1xx_hal::{pac, prelude::*, timer::Timer};
+use vfd_grid_driver::display::VfdDisplay;
+
+#[global_allocator]
+static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
+
+const HEAP_SIZE: usize = 1024;
 
 #[entry]
 fn main() -> ! {
+    unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
+
     // Get access to the core peripherals from the cortex-m crate
     let cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
@@ -55,11 +58,29 @@ fn main() -> ! {
     let d6 = gpioa.pa10.into_push_pull_output(&mut gpioa.crh);
     let d7 = gpioa.pa11.into_push_pull_output(&mut gpioa.crh);
 
+    let mut display = VfdDisplay {
+        d0,
+        d1,
+        d2,
+        d3,
+        d4,
+        d5,
+        d6,
+        d7,
+        write_strobe,
+        reset,
+    };
+
+    display.reset().unwrap_or(());
+
     // Configure gpio C pin 13 as a push-pull output. The `crh` register is passed to the function
     // in order to configure the port. For pins 0-7, crl should be passed instead.
     let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
     // Configure the syst timer to trigger an update every second
     let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(1.hz());
+
+    let test_string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ÀÁÂÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÖÙÚÛÜßàáâäåæçèéêëìíîïñòóôöøùúûü!?#%&*+÷±=.,'\"`°-_^:;/()[]{}<>@$¢€￥⊙○♦";
+    // TODO: send characters in a loop, with configurable delay after each
 
     // Wait for the timer to trigger an update and change the state of the LED
     loop {
