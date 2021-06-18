@@ -1,7 +1,5 @@
-use bit_vec::BitVec;
-
 use crate::command::Command;
-use crate::display::{SendCommand, VfdDisplay};
+use crate::display::{DisplayError, SendCommand};
 
 #[repr(u8)]
 #[derive(Copy, Clone)]
@@ -347,11 +345,11 @@ pub fn lookup_character(character: char) -> Option<Character> {
 }
 
 impl Character {
-    pub(crate) fn send<DI>(self, display: &mut DI)
+    pub fn send<DI>(self, display: &mut DI) -> Result<(), DisplayError>
     where
         DI: SendCommand,
     {
-        display.send_command(&Command::NormalDataEntry);
-        display.send_command(&Command::SendCharacter(self));
+        display.send_command(&Command::NormalDataEntry)?;
+        display.send_command(&Command::SendCharacter(self))
     }
 }

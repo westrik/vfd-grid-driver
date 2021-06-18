@@ -1,5 +1,4 @@
 use crate::character::Character;
-use crate::display::VfdDisplay;
 
 #[repr(u8)]
 #[derive(Copy, Clone)]

@@ -11,6 +11,8 @@ use cortex_m_rt::entry;
 // use cortex_m_semihosting::{hprintln, debug};
 use embedded_hal::digital::v2::OutputPin;
 use stm32f1xx_hal::{pac, prelude::*, timer::Timer};
+
+use vfd_grid_driver::character::Character;
 use vfd_grid_driver::display::VfdDisplay;
 
 #[global_allocator]
@@ -67,11 +69,12 @@ fn main() -> ! {
         d5,
         d6,
         d7,
+        busy,
         write_strobe,
         reset,
     };
 
-    display.reset().unwrap_or(());
+    display.reset().unwrap();
 
     // Configure gpio C pin 13 as a push-pull output. The `crh` register is passed to the function
     // in order to configure the port. For pins 0-7, crl should be passed instead.
@@ -79,14 +82,17 @@ fn main() -> ! {
     // Configure the syst timer to trigger an update every second
     let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(1.hz());
 
-    let test_string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ÀÁÂÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÖÙÚÛÜßàáâäåæçèéêëìíîïñòóôöøùúûü!?#%&*+÷±=.,'\"`°-_^:;/()[]{}<>@$¢€￥⊙○♦";
+    let _test_string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ÀÁÂÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÖÙÚÛÜßàáâäåæçèéêëìíîïñòóôöøùúûü!?#%&*+÷±=.,'\"`°-_^:;/()[]{}<>@$¢€￥⊙○♦";
     // TODO: send characters in a loop, with configurable delay after each
 
     // Wait for the timer to trigger an update and change the state of the LED
     loop {
         block!(timer.wait()).unwrap();
+        Character::ExclamationPoint.send(&mut display).unwrap();
+        display.write_strobe.set_high().unwrap();
         led.set_high().unwrap();
         block!(timer.wait()).unwrap();
+        display.write_strobe.set_low().unwrap();
         led.set_low().unwrap();
     }
 }

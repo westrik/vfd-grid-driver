@@ -3,8 +3,8 @@ use embedded_hal::digital::v2::OutputPin;
 
 use crate::command::Command;
 
-const DISPLAY_WIDTH: usize = 20;
-const DISPLAY_HEIGHT: usize = 2;
+const _DISPLAY_WIDTH: usize = 20;
+const _DISPLAY_HEIGHT: usize = 2;
 
 #[derive(Debug)]
 pub enum DisplayError {
@@ -12,7 +12,7 @@ pub enum DisplayError {
     InvalidBit,
 }
 
-pub struct VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS> {
+pub struct VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, BSY, RST, WS> {
     pub d7: DP7,
     pub d6: DP6,
     pub d5: DP5,
@@ -21,12 +21,13 @@ pub struct VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS> {
     pub d2: DP2,
     pub d1: DP1,
     pub d0: DP0,
+    pub busy: BSY,
     pub reset: RST,
     pub write_strobe: WS,
 }
 
-impl<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS>
-    VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS>
+impl<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, BSY, RST, WS>
+    VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, BSY, RST, WS>
 where
     DP7: OutputPin,
     DP6: OutputPin,
@@ -46,13 +47,13 @@ where
     }
 }
 
-pub(crate) trait SendCommand {
+pub trait SendCommand {
     fn send_command(&mut self, command: &Command) -> Result<(), DisplayError>;
     fn send_commands(&mut self, commands: &[Command]) -> Result<(), DisplayError>;
 }
 
-impl<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS> SendCommand
-    for VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, RST, WS>
+impl<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, BSY, RST, WS> SendCommand
+    for VfdDisplay<DP7, DP6, DP5, DP4, DP3, DP2, DP1, DP0, BSY, RST, WS>
 where
     DP7: OutputPin,
     DP6: OutputPin,
